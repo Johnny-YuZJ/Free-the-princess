@@ -45,6 +45,7 @@ Enemy.prototype.update = function (dt) {
 
 Enemy.prototype.collide = function () {
     player.death = true;
+    princess.saved = false;
 };
 
 Enemy.prototype.checkCollision = function () {
@@ -116,8 +117,6 @@ HornGirl.prototype = Object.create(Enemy.prototype);
 HornGirl.prototype.constructor = HornGirl;
 
 
-
-
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
@@ -130,14 +129,33 @@ var Player = function (x, y) {
     this.vy = 0; // vector on y axis
     this.vxBug = 0;
     this.death = false;
+    this.key = true;
 };
 
 Player.prototype.update = function (dt) {
-    if ((this.vxBug == 0) && (this.y > leny * 4) && (this.y < leny * 6)) {
+    if ((this.vxBug == 0) && (this.y > leny * 3) && (this.y < leny * 6)) {
         player.death = true;
+        princess.saved = false;
     }
-    this.x += ((this.vx + this.vxBug) * dt);
-    this.y += (this.vy * dt);
+    if (this.y > (leny * -0.75)) {
+        if (this.y < leny * 0.75) {
+            if (((this.vx > 0) && ((this.x < (lenx * 4)) || ((this.x > (lenx * 6)) && (this.x < (lenx * 10.4))))) ||
+                ((this.vx < 0) && ((this.x > (lenx * 6)) || ((this.x < (lenx * 6)) && (this.x > (lenx * 0.4))))) ||
+                (this.key == true)) {
+                this.x += (this.vx * dt);
+                this.y += (this.vy * dt);
+            }
+        } else if ((((this.vx + this.vxBug) < 0) && (this.x > (lenx * -0.4))) ||
+            (((this.vx + this.vxBug) > 0) && (this.x < (lenx * 10.4)))) {
+            this.x += ((this.vx + this.vxBug) * dt);
+        }
+        if ((this.y > leny * 0.75) && (this.vy < 0)) {
+            this.y += (this.vy * dt);
+        }
+        if ((this.y < leny * 10) && (this.y > leny * 0.75) && (this.vy > 0)) {
+            this.y += (this.vy * dt);
+        }
+    }
 };
 
 Player.prototype.render = function () {
@@ -201,10 +219,84 @@ Player.prototype.handleInput = function (key, mode) {
     }
 };
 
+var Princess = function (x, y) {
+    this.x = (x - 1) * lenx;
+    this.y = -20 + ((y - 1) * leny);
+    this.sprite = 'images/Princess.png';
+    this.saved = false;
+};
+Princess.prototype.update = function (dt) {
+    if (this.saved == true) {
+        this.x = (player.x + (lenx * 0.25));
+        this.y = player.y;
+    }
+    if ((this.x > (spawn.x - (lenx * 0.25))) && (this.x < (spawn.x + (lenx * 0.5))) &&
+        (this.y > (spawn.y - (leny * 0.25))) && (this.y < (spawn.y + (leny * 0.25)))) {
+        spawn.sprite = 'images/Heart.png';
+    }
+};
+Princess.prototype.checkCollision = function () {
+    if ((this.x > (player.x - (lenx * 0.25))) && (this.x < (player.x + (lenx * 0.25))) &&
+        (this.y > (player.y - (leny * 0.2))) && (this.y < (player.y + (leny * 0.2)))) {
+        this.saved = true;
+    }
+};
+Princess.prototype.render = function () {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+
+var Selector = function (x, y) {
+    this.x = (x - 1) * lenx;
+    this.y = -20 + ((y - 1) * leny);
+    this.sprite = 'images/Selector.png';
+};
+Selector.prototype.render = function () {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
+var Cage = function (x, y) {
+    Selector.call(this, x, y);
+};
+Cage.prototype = Object.create(Selector.prototype);
+Cage.prototype.constructor = Cage;
+Cage.prototype.update = function () {
+    if ((this.x > (player.x - (lenx * 1))) && (this.x < (player.x + (lenx * 1))) &&
+        (this.y > (player.y - (leny * 0.75))) && (this.y < (player.y + (leny * 0.75))) && (player.key == true)) {
+        this.sprite = 'images/Star.png';
+    }
+};
+
+var Key = function () {
+    this.x = (lenx * Math.floor(Math.random() * 10 + 1));
+    this.y = (-20 + (leny * Math.floor(Math.random() * 10 + 1)));
+    this.sprite = 'images/Key.png';
+};
+Key.prototype.update = function() {
+    if (this.collected == true) {
+        this.x = (player.x - (lenx * 0.25));
+        this.y = player.y;
+    }
+};
+Key.prototype.checkCollision = function () {
+    if ((this.x > (player.x - (lenx * 0.25))) && (this.x < (player.x + (lenx * 0.25))) &&
+        (this.y > (player.y - (leny * 0.2))) && (this.y < (player.y + (leny * 0.2)))) {
+        this.collected = true;
+    }
+};
+Key.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Place the player object in a variable called player
 
+var spawn = new Selector(6, 10.75);
+var cage = new Cage(6, 0.75);
+var key = new Key();
+
+var princess = new Princess(6, 1);
 
 var wB51 = new WaterBug(5, 'ltr');
 var wB52 = new WaterBug(5, 'ltr');
@@ -249,7 +341,7 @@ var pG = [pG21, pG31, pG41, pG81, pG91, pG101, pG22, pG32, pG42, pG82, pG92, pG1
 
 var allEnemies = cG.concat(hG, pG);
 
-var player = new Player(6, 11);
+var player = new Player(6, 9.75);
 
 
 

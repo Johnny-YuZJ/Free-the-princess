@@ -100,10 +100,16 @@ var Engine = (function(global) {
         if (player.death == true) {
             reset();
         }
+        key.update();
+        cage.update();
+        princess.update();
     }
+    
 
     function checkCollisions() {
         player.vxBug = 0;
+        key.checkCollision();
+        princess.checkCollision();
         allBugs.forEach(function(bug) {
             bug.checkCollision();
         });
@@ -157,8 +163,7 @@ var Engine = (function(global) {
                  */
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
-        }
-
+        }        
         renderEntities();
     }
 
@@ -174,15 +179,18 @@ var Engine = (function(global) {
         enemiesCopy.forEach(function(enemy) {
 
         });
-
+       
         allBugs.forEach(function(bug) {
             bug.render();
         });
         allEnemies.forEach(function(enemy) {
             enemy.render();
         });
-
+        spawn.render();
+        princess.render();        
+        cage.render();
         player.render();
+        key.render();
     }
 
     /* This function does nothing but it could have been a good place to
@@ -191,7 +199,7 @@ var Engine = (function(global) {
      */
     function reset() {
         player.x = 5 * lenx;
-        player.y = 10 * leny;
+        player.y = 9.75 * leny;
         player.vx = 0; 
         player.vy = 0; 
         player.vxBug = 0;
@@ -214,6 +222,9 @@ var Engine = (function(global) {
         'images/PinkGirl.png',
         'images/Princess.png',
         'images/Star.png',
+        'images/Selector.png',
+        'images/Heart.png',
+        'images/Key.png'
     ]);
     Resources.onReady(init);
 
