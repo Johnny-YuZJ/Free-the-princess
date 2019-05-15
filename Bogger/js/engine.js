@@ -13,7 +13,7 @@
  * writing app.js a little simpler to work with.
  */
 
-var Engine = (function(global) {
+var Engine = (function (global) {
     /* Predefine the variables we'll be using within this scope,
      * create the canvas element, grab the 2D context for that canvas
      * set the canvas element's height/width and add it to the DOM.
@@ -27,6 +27,9 @@ var Engine = (function(global) {
     canvas.width = 1111;
     canvas.height = 1111;
     doc.body.appendChild(canvas);
+
+    var life = "Life: " + player.life;
+    var score = "Score: " + player.score;
 
     /* This function serves as the kickoff point for the game loop itself
      * and handles properly calling the update and render methods.
@@ -90,30 +93,46 @@ var Engine = (function(global) {
      * render methods.
      */
     function updateEntities(dt) {
-        allBugs.forEach(function(bug) {
+        allBugs.forEach(function (bug) {
             bug.update(dt);
         });
-        allEnemies.forEach(function(enemy) {
+        allEnemies.forEach(function (enemy) {
             enemy.update(dt);
         });
         player.update(dt);
         if (player.death == true) {
-            reset();
+            player.life -= 1;
+            if (player.life <= 0) {
+                life = "You Lost. Refresh page to play again.";
+            } else {
+                life = "Life: " + player.life;
+                reset();
+            }
+        }
+        score = "Score: " + player.score;
+        if (player.score >= 1000) {
+            life = "You won. Refresh page to play again.";
         }
         key.update();
+        gems.forEach(function (gem) {
+            gem.update();
+        });
         cage.update();
         princess.update();
     }
-    
+
 
     function checkCollisions() {
         player.vxBug = 0;
         key.checkCollision();
+        gems.forEach(function (gem) {
+            gem.checkCollision();
+        });
         princess.checkCollision();
-        allBugs.forEach(function(bug) {
+        allBugs.forEach(function (bug) {
             bug.checkCollision();
         });
-        allEnemies.forEach(function(enemy) {
+        allEnemies.forEach(function (enemy) {
             enemy.checkCollision();
         });
     }
@@ -128,25 +147,29 @@ var Engine = (function(global) {
         /* This array holds the relative URL to the image used
          * for that particular row of the game level.
          */
+
+        document.getElementById("life").innerHTML = life;
+        document.getElementById("score").innerHTML = score;
+
         var rowImages = [
-                'images/stone-block.png',
-                'images/stone-block.png',
-                'images/stone-block.png',
-                'images/stone-block.png', 
-                'images/water-block.png',
-                'images/water-block.png',
-                'images/water-block.png',   
-                'images/stone-block.png',   
-                'images/stone-block.png',   
-                'images/stone-block.png',  
-                'images/grass-block.png'    
-            ],
+            'images/stone-block.png',
+            'images/stone-block.png',
+            'images/stone-block.png',
+            'images/stone-block.png',
+            'images/water-block.png',
+            'images/water-block.png',
+            'images/water-block.png',
+            'images/stone-block.png',
+            'images/stone-block.png',
+            'images/stone-block.png',
+            'images/grass-block.png'
+        ],
             numRows = 11,
             numCols = 11,
             row, col;
 
         // Before drawing, clear existing canvas
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         /* Loop through the number of rows and columns we've defined above
          * and, using the rowImages array, draw the correct image for that
@@ -163,7 +186,7 @@ var Engine = (function(global) {
                  */
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
-        }        
+        }
         renderEntities();
     }
 
@@ -175,19 +198,24 @@ var Engine = (function(global) {
         /* Loop through all of the objects within the allEnemies array and call
          * the render function you have defined.
          */
-        var enemiesCopy = allEnemies;
-        enemiesCopy.forEach(function(enemy) {
 
+        /*
+       var enemiesCopy = allEnemies;
+       enemiesCopy.forEach(function (enemy) {
+
+       });
+*/
+        gems.forEach(function (gem) {
+            gem.render();
         });
-       
-        allBugs.forEach(function(bug) {
+        allBugs.forEach(function (bug) {
             bug.render();
         });
-        allEnemies.forEach(function(enemy) {
+        allEnemies.forEach(function (enemy) {
             enemy.render();
         });
         spawn.render();
-        princess.render();        
+        princess.render();
         cage.render();
         player.render();
         key.render();
@@ -200,8 +228,8 @@ var Engine = (function(global) {
     function reset() {
         player.x = 5 * lenx;
         player.y = 9.75 * leny;
-        player.vx = 0; 
-        player.vy = 0; 
+        player.vx = 0;
+        player.vy = 0;
         player.vxBug = 0;
         player.death = false;
     }
@@ -224,7 +252,10 @@ var Engine = (function(global) {
         'images/Star.png',
         'images/Selector.png',
         'images/Heart.png',
-        'images/Key.png'
+        'images/Key.png',
+        'images/GemBlue.png',
+        'images/GemGreen.png',
+        'images/GemOrange.png'
     ]);
     Resources.onReady(init);
 
